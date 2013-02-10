@@ -8,6 +8,11 @@
 
 #import "ArticleViewController.h"
 
+// added lea
+#import "TFHpple.h"
+#import "HTMLParsing.h"
+#import "Contributor.h"
+
 @interface ArticleViewController ()
 
 @end

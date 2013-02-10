@@ -1,49 +1,39 @@
 //
-//  FirstViewController.m
+//  SuperViewController.m
 //  SandB-iOS
 //
-//  Created by Lea Marolt on 1/25/13.
+//  Created by Colin Tremblay on 2/8/13.
 //  Copyright (c) 2013 Grinnell AppDev. All rights reserved.
 //
 
-#import "FirstViewController.h"
+#import "SuperViewController.h"
+#import "ArticleViewController.h"
+#import "Reachability.h"
+#import "Article.h"
 
-
-@interface FirstViewController ()
+@interface SuperViewController ()
 
 @end
 
-@implementation FirstViewController
+@implementation SuperViewController{
+    NSString *alert;
+}
 
+@synthesize cellIdentifier;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        self.title = NSLocalizedString(@"Scarlet & Black", @"Scarlet & Black");
-        self.tabBarItem.image = [UIImage imageNamed:@"first"];
+        // custom??
     }
     return self;
 }
 
-- (void)viewDidLoad {
-    [super loadArticles:@"http://www.thesandb.com/feed"];
-    [super viewDidLoad];
-<<<<<<< HEAD
-    
-    // Rename the back button on the child views
-    UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStyleBordered target:nil action:nil];
-    [[self navigationItem] setBackBarButtonItem:backButton];
-    
-    
-    self.cellIdentifier = @"NewsCell";
-    self.title = @"Scarlet and Black";
-    self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
-    
-   // [self loadArticles];
-    
+
+- (void)loadArticles:(NSString *)url{
     //Get the XML data
-    NSData *xmlData = [[NSData alloc]initWithContentsOfURL:[NSURL URLWithString:@"http://www.thesandb.com/feed"]];
+    NSData *xmlData = [[NSData alloc]initWithContentsOfURL:[NSURL URLWithString:url]];
     tbxml = [[TBXML alloc]initWithXMLData:xmlData];
     articleArray = [[NSMutableArray alloc] init];
     // Obtain root element
@@ -74,6 +64,7 @@
             articleBody = [articleBody stringByReplacingOccurrencesOfString:@"&#215;" withString:@"x"];
             articleBody = [articleBody stringByReplacingOccurrencesOfString:@"&#039;" withString:@"'"];
             articleBody = [articleBody stringByReplacingOccurrencesOfString:@"&#60;" withString:@"<"];
+            articleBody = [articleBody stringByReplacingOccurrencesOfString:@"&lt;" withString:@"<"];
             articleTitle = [articleTitle stringByReplacingOccurrencesOfString:@"&#8230" withString:@"... "];
             articleTitle = [articleTitle stringByReplacingOccurrencesOfString:@"&#8217;" withString:@"'"];
             articleTitle = [articleTitle stringByReplacingOccurrencesOfString:@"&#038;" withString:@"&"];
@@ -83,7 +74,6 @@
             articleTitle = [articleTitle stringByReplacingOccurrencesOfString:@"&#8220" withString:@"\""];
             articleTitle = [articleTitle stringByReplacingOccurrencesOfString:@"&#8221" withString:@"\""];
             
-            
             art.title = articleTitle;
             art.article = articleBody;
             [articleArray addObject:art];
@@ -91,13 +81,94 @@
             
         }
     }
-=======
->>>>>>> 5290edade064b759f8a674357c80a4ddfdf26749
 }
 
-- (void)didReceiveMemoryWarning {
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    // Rename the back button on the child views
+    UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStyleBordered target:nil action:nil];
+    [[self navigationItem] setBackBarButtonItem:backButton];
+    
+    self.cellIdentifier = @"NewsCell";
+    self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
+   // self.title = @"Scarlet and Black";
+}
+
+- (void)didReceiveMemoryWarning
+{
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
 
+//Method to determine the availability of network Connections using the Reachability Class
+- (BOOL)networkCheck {
+    Reachability *networkReachability = [Reachability reachabilityForInternetConnection];
+    NetworkStatus networkStatus = [networkReachability currentReachabilityStatus];
+    return (!(networkStatus == NotReachable));
+}
+
+#pragma mark - Table view data source
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView  numberOfRowsInSection:(NSInteger)section {
+    return articleArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    //Register the NIB cell object
+    [tableView registerNib:[UINib nibWithNibName:@"NewsCell" bundle:nil] forCellReuseIdentifier:self.cellIdentifier];
+    
+    
+    UITableViewCell *cell = (UITableViewCell*)[tableView dequeueReusableCellWithIdentifier:self.cellIdentifier];
+	if (cell == nil)
+	{
+		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:self.cellIdentifier];
+	}
+    UILabel *newsTitle = (UILabel *)[cell viewWithTag:1001];
+    UIImageView *newsImage = (UIImageView *)[cell viewWithTag:1002];
+    UILabel *newsArticle = (UILabel *)[cell viewWithTag:1003];
+    Article *currentArticle = [[Article alloc] init];
+    currentArticle = [articleArray objectAtIndex:indexPath.row];
+    
+    newsTitle.text = currentArticle.title;
+    newsArticle.text = currentArticle.article;
+    [newsImage setImage:[UIImage imageNamed:@"first.png"]];
+    
+    return cell;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 122;
+    //    return [indexPath row] * 20;
+}
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    // TODO - Set this based on URL
+    return @"Newest Stories";
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    return @"";
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    ArticleViewController *articlePage = [[ArticleViewController alloc] initWithNibName:@"ArticleViewController" bundle:nil];
+    articlePage.article = [[Article alloc] init];
+    articlePage.article = [articleArray objectAtIndex:indexPath.row];
+    [self.navigationController pushViewController:articlePage animated:YES];
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+
+#pragma mark UIAlertViewDelegate Methods
+// Called when an alert button is tapped.
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    return;
+}
+
 @end
+
+
